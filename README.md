@@ -8,12 +8,71 @@ Like [gstack](https://github.com/garrytan/gstack), but instead of Garry Tan's st
 
 ## Install
 
+### Auto-detect (recommended)
+
+Detects your installed platforms and installs for all of them. No dependencies. No build step.
+
 ```bash
 git clone https://github.com/justinz183/elon-skill.git ~/.claude/skills/elon
 cd ~/.claude/skills/elon && ./setup
 ```
 
-Auto-detects your installed platforms (Claude Code, Codex, Kiro, Cursor, OpenClaw) and installs for all of them. No dependencies. No build step.
+### Claude Code
+
+```bash
+git clone https://github.com/justinz183/elon-skill.git ~/.claude/skills/elon
+cd ~/.claude/skills/elon && ./setup --host=claude
+```
+Then **quit and reopen Claude Code**, or start a new session.
+
+### Cursor
+
+```bash
+git clone https://github.com/justinz183/elon-skill.git ~/.claude/skills/elon
+cd ~/.claude/skills/elon && ./setup --host=cursor
+```
+Then **reload window** — `Cmd+Shift+P` → `Reload Window`.
+
+### Codex (OpenAI)
+
+```bash
+git clone https://github.com/justinz183/elon-skill.git ~/.claude/skills/elon
+cd ~/.claude/skills/elon && ./setup --host=codex
+```
+Then **restart the Codex CLI**.
+
+### Kiro (AWS)
+
+```bash
+git clone https://github.com/justinz183/elon-skill.git ~/.claude/skills/elon
+cd ~/.claude/skills/elon && ./setup --host=kiro
+```
+Then **close and reopen the workspace**.
+
+### OpenClaw
+
+```bash
+git clone https://github.com/justinz183/elon-skill.git ~/.claude/skills/elon
+cd ~/.claude/skills/elon && ./setup --host=openclaw
+```
+Then **restart the OpenClaw session**.
+
+### All platforms at once
+
+```bash
+git clone https://github.com/justinz183/elon-skill.git ~/.claude/skills/elon
+cd ~/.claude/skills/elon && ./setup --host=all
+```
+
+### Project-scoped install
+
+Install to the current project instead of globally:
+
+```bash
+cd your-project/
+~/.claude/skills/elon/setup --local                  # Auto-detect platform
+~/.claude/skills/elon/setup --host=cursor --local     # Cursor project only
+```
 
 ---
 
@@ -102,27 +161,8 @@ No dependencies. No runtime. No build step. Just markdown that Claude reads.
 | **Claude Code** | `~/.claude/skills/` | `.claude/skills/` | SKILL.md (symlinked) | ✅ |
 | **Codex (OpenAI)** | `~/.codex/skills/` | `.agents/skills/` | SKILL.md (symlinked) | ✅ |
 | **Kiro (AWS)** | `~/.kiro/skills/` | `.kiro/skills/` | SKILL.md (symlinked) | ✅ |
-| **Cursor** | — (project only) | `.cursor/rules/` | `.mdc` (generated) | ✅ |
+| **Cursor** | `~/.cursor/rules/` | `.cursor/rules/` | `.mdc` (generated) | ✅ |
 | **OpenClaw** | `~/.openclaw/skills/` | `skills/` | SKILL.md (symlinked) | ✅ |
-
-### Install for a specific platform
-
-```bash
-./setup --host=claude      # Claude Code only
-./setup --host=codex       # Codex only
-./setup --host=kiro        # Kiro only
-./setup --host=cursor      # Cursor (generates .mdc rule files)
-./setup --host=openclaw    # OpenClaw only
-./setup --host=all         # All platforms at once
-./setup                    # Auto-detect installed platforms
-```
-
-### Project-scoped install
-
-```bash
-./setup --local                   # Auto-detect, install to current project
-./setup --host=codex --local      # Codex project-scoped
-```
 
 ---
 
