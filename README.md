@@ -9,7 +9,7 @@ Built from *The Book of Elon* by Eric Jorgenson.
 ## Install
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/elon-skill.git ~/.claude/skills/elon
+git clone https://github.com/zh131312/elon-skill.git ~/.claude/skills/elon
 cd ~/.claude/skills/elon && ./setup
 ```
 
@@ -18,7 +18,7 @@ That's it. Open Claude Code and type `/elon`.
 ### Project-scoped install
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/elon-skill.git
+git clone https://github.com/zh131312/elon-skill.git
 cd elon-skill && ./setup --local
 ```
 
