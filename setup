@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# /elon — Elon Musk AI Mentor
+# One-command installer for Claude Code and compatible agents
+
+SKILL_NAME="elon"
+SKILL_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BOLD='\033[1m'
+NC='\033[0m'
+
+info()  { echo -e "${GREEN}▸${NC} $1"; }
+warn()  { echo -e "${YELLOW}▸${NC} $1"; }
+error() { echo -e "${RED}▸${NC} $1" >&2; }
+
+echo ""
+echo -e "${BOLD}⚡ /elon — Installing Elon Musk AI Mentor${NC}"
+echo ""
+
+# Detect target
+CLAUDE_SKILLS_DIR="$HOME/.claude/skills"
+LOCAL=false
+
+for arg in "$@"; do
+  case "$arg" in
+    --local) LOCAL=true ;;
+    --help|-h)
+      echo "Usage: ./setup [OPTIONS]"
+      echo ""
+      echo "Options:"
+      echo "  --local    Install to ./.claude/skills/ (project-scoped)"
+      echo "  --help     Show this message"
+      exit 0
+      ;;
+  esac
+done
+
+if [ "$LOCAL" = true ]; then
+  CLAUDE_SKILLS_DIR=".claude/skills"
+  info "Installing locally to ${CLAUDE_SKILLS_DIR}/${SKILL_NAME}/"
+else
+  info "Installing globally to ${CLAUDE_SKILLS_DIR}/${SKILL_NAME}/"
+fi
+
+# Verify SKILL.md exists
+if [ ! -f "${SKILL_DIR}/SKILL.md" ]; then
+  error "SKILL.md not found in ${SKILL_DIR}. Something is wrong with the repo."
+  exit 1
+fi
+
+# Create skills directory if needed
+mkdir -p "${CLAUDE_SKILLS_DIR}"
+
+# Install: symlink the skill directory
+TARGET="${CLAUDE_SKILLS_DIR}/${SKILL_NAME}"
+
+if [ -L "$TARGET" ]; then
+  # Existing symlink — update it
+  rm "$TARGET"
+  ln -s "$SKILL_DIR" "$TARGET"
+  info "Updated existing symlink"
+elif [ -d "$TARGET" ]; then
+  # Existing directory — check if it's our repo
+  if [ "$(cd "$TARGET" && pwd)" = "$SKILL_DIR" ]; then
+    info "Already installed from this location"
+  else
+    warn "Existing skill found at ${TARGET}"
+    warn "Backing up to ${TARGET}.bak"
+    mv "$TARGET" "${TARGET}.bak"
+    ln -s "$SKILL_DIR" "$TARGET"
+    info "Installed (previous version backed up)"
+  fi
+else
+  ln -s "$SKILL_DIR" "$TARGET"
+  info "Symlinked skill"
+fi
+
+# Verify
+if [ -f "${TARGET}/SKILL.md" ]; then
+  echo ""
+  echo -e "${GREEN}${BOLD}✓ Installed successfully.${NC}"
+  echo ""
+  echo -e "  Type ${BOLD}/elon${NC} in Claude Code to start a mentorship session."
+  echo ""
+else
+  error "Installation failed — SKILL.md not found at target."
+  exit 1
+fi
