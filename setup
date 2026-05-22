@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # /elon — Elon Musk AI Mentor Suite
-# Multi-platform installer: Claude Code, Codex, Kiro, Cursor, OpenClaw
+# Multi-platform installer: Claude Code, Codex, Kiro, OpenClaw
 
 SKILL_DIR="$(cd "$(dirname "$0")" && pwd)"
 
@@ -35,7 +35,7 @@ for arg in "$@"; do
       echo "Usage: ./setup [OPTIONS]"
       echo ""
       echo "Options:"
-      echo "  --host=PLATFORM  Target platform: claude, codex, kiro, cursor, openclaw, all, auto (default: auto)"
+      echo "  --host=PLATFORM  Target platform: claude, codex, kiro, openclaw, all, auto (default: auto)"
       echo "  --local          Install to project scope instead of global"
       echo "  --help           Show this message"
       echo ""
@@ -59,10 +59,6 @@ detect_platforms() {
   command -v claude >/dev/null 2>&1 && platforms+=("claude")
   command -v codex >/dev/null 2>&1 && platforms+=("codex")
   command -v kiro >/dev/null 2>&1 && platforms+=("kiro")
-  # Cursor: check for .cursor dir or cursor command
-  if command -v cursor >/dev/null 2>&1 || [ -d "$HOME/.cursor" ]; then
-    platforms+=("cursor")
-  fi
   command -v openclaw >/dev/null 2>&1 && platforms+=("openclaw")
   # If nothing detected, default to claude
   if [ ${#platforms[@]} -eq 0 ]; then
@@ -75,7 +71,7 @@ if [ -z "$HOST" ] || [ "$HOST" = "auto" ]; then
   PLATFORMS=($(detect_platforms))
   info "Auto-detected: ${PLATFORMS[*]}"
 elif [ "$HOST" = "all" ]; then
-  PLATFORMS=("claude" "codex" "kiro" "cursor" "openclaw")
+  PLATFORMS=("claude" "codex" "kiro" "openclaw")
 else
   PLATFORMS=("$HOST")
 fi
@@ -140,14 +136,6 @@ for platform in "${PLATFORMS[@]}"; do
         SKILLS_DIR="$HOME/.kiro/skills"
       fi
       ;;
-    cursor)
-      # Cursor uses .cursor/rules/ with .mdc files
-      if [ "$LOCAL" = true ]; then
-        SKILLS_DIR=".cursor/rules"
-      else
-        SKILLS_DIR="$HOME/.cursor/rules"
-      fi
-      ;;
     openclaw)
       if [ "$LOCAL" = true ]; then
         SKILLS_DIR="skills"
@@ -163,92 +151,42 @@ for platform in "${PLATFORMS[@]}"; do
 
   INSTALLED=0
 
-  if [ "$platform" = "cursor" ]; then
-    # --- Cursor: Generate .mdc rule files ---
-    mkdir -p "$SKILLS_DIR"
+  # --- Symlink SKILL.md directories ---
+  mkdir -p "$SKILLS_DIR"
 
-    # Generate main elon rule
-    generate_cursor_rule() {
-      local skill_name="$1"
-      local source_dir="$2"
-      local target_file="${SKILLS_DIR}/${skill_name}.mdc"
-
-      if [ ! -f "${source_dir}/SKILL.md" ]; then
-        return 1
-      fi
-
-      # Extract description from YAML frontmatter
-      local description
-      description=$(sed -n '/^---$/,/^---$/{ /^description:/{ s/^description: *//; p; } }' "${source_dir}/SKILL.md")
-
-      # Extract content after frontmatter
-      local content
-      content=$(awk '/^---$/{c++; next} c>=2' "${source_dir}/SKILL.md")
-
-      cat > "$target_file" << MDCEOF
----
-description: ${description}
-alwaysApply: false
----
-${content}
-MDCEOF
-      return 0
-    }
-
-    # Main skill
-    if generate_cursor_rule "elon" "$SKILL_DIR"; then
-      info "Installed elon.mdc"
+  # Main /elon skill
+  ELON_TARGET="${SKILLS_DIR}/elon"
+  REAL_SKILL_DIR="$(cd "$SKILL_DIR" && pwd -P)"
+  if [ -d "$ELON_TARGET" ] && [ ! -L "$ELON_TARGET" ]; then
+    REAL_TARGET="$(cd "$ELON_TARGET" && pwd -P)"
+    if [ "$REAL_SKILL_DIR" = "$REAL_TARGET" ]; then
+      info "Installed /elon (already in place)"
       INSTALLED=$((INSTALLED + 1))
-    fi
-
-    # Sub-skills
-    for entry in "${SUB_SKILLS[@]}"; do
-      c_skill_name="${entry%%:*}"
-      c_sub_dir="${entry##*:}"
-      if generate_cursor_rule "$c_skill_name" "${SKILL_DIR}/${c_sub_dir}"; then
-        info "Installed ${c_skill_name}.mdc"
-        INSTALLED=$((INSTALLED + 1))
-      fi
-    done
-
-  else
-    # --- Claude Code / Codex / Kiro / OpenClaw: Symlink SKILL.md directories ---
-    mkdir -p "$SKILLS_DIR"
-
-    # Main /elon skill
-    ELON_TARGET="${SKILLS_DIR}/elon"
-    REAL_SKILL_DIR="$(cd "$SKILL_DIR" && pwd -P)"
-    if [ -d "$ELON_TARGET" ] && [ ! -L "$ELON_TARGET" ]; then
-      REAL_TARGET="$(cd "$ELON_TARGET" && pwd -P)"
-      if [ "$REAL_SKILL_DIR" = "$REAL_TARGET" ]; then
-        info "Installed /elon (already in place)"
-        INSTALLED=$((INSTALLED + 1))
-      else
-        symlink_skill "$SKILL_DIR" "$ELON_TARGET" "elon" && {
-          info "Installed /elon"
-          INSTALLED=$((INSTALLED + 1))
-        }
-      fi
     else
       symlink_skill "$SKILL_DIR" "$ELON_TARGET" "elon" && {
         info "Installed /elon"
         INSTALLED=$((INSTALLED + 1))
       }
     fi
-
-    # Sub-skills
-    for entry in "${SUB_SKILLS[@]}"; do
-      skill_name="${entry%%:*}"
-      sub_dir="${entry##*:}"
-      source="${SKILL_DIR}/${sub_dir}"
-      target="${SKILLS_DIR}/${skill_name}"
-
-      if symlink_skill "$source" "$target" "$skill_name"; then
-        info "Installed /${skill_name}"
-        INSTALLED=$((INSTALLED + 1))
-      fi
-    done
+  else
+    symlink_skill "$SKILL_DIR" "$ELON_TARGET" "elon" && {
+      info "Installed /elon"
+      INSTALLED=$((INSTALLED + 1))
+    }
   fi
+
+  # Sub-skills
+  for entry in "${SUB_SKILLS[@]}"; do
+    skill_name="${entry%%:*}"
+    sub_dir="${entry##*:}"
+    source="${SKILL_DIR}/${sub_dir}"
+    target="${SKILLS_DIR}/${skill_name}"
+
+    if symlink_skill "$source" "$target" "$skill_name"; then
+      info "Installed /${skill_name}"
+      INSTALLED=$((INSTALLED + 1))
+    fi
+  done
 
   info "${platform}: ${INSTALLED} skills installed"
   TOTAL_INSTALLED=$((TOTAL_INSTALLED + INSTALLED))
@@ -273,7 +211,6 @@ echo -e "${YELLOW}${BOLD}⚠  IMPORTANT: Restart your editor to activate the ski
 echo -e "${YELLOW}   Skills won't appear until the skill registry reloads.${NC}"
 echo ""
 echo -e "   • ${BOLD}Claude Code${NC}  — quit and reopen, or start a new session"
-echo -e "   • ${BOLD}Cursor${NC}       — reload window (Cmd+Shift+P → 'Reload Window')"
 echo -e "   • ${BOLD}Codex${NC}        — restart the Codex CLI"
 echo -e "   • ${BOLD}Kiro${NC}         — close and reopen the workspace"
 echo -e "   • ${BOLD}OpenClaw${NC}     — restart the OpenClaw session"

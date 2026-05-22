@@ -25,14 +25,6 @@ cd ~/.claude/skills/elon && ./setup --host=claude
 ```
 Then **quit and reopen Claude Code**, or start a new session.
 
-### Cursor
-
-```bash
-git clone https://github.com/justinz183/elon-skill.git ~/.claude/skills/elon
-cd ~/.claude/skills/elon && ./setup --host=cursor
-```
-Then **reload window** — `Cmd+Shift+P` → `Reload Window`.
-
 ### Codex (OpenAI)
 
 ```bash
@@ -71,7 +63,6 @@ Install to the current project instead of globally:
 ```bash
 cd your-project/
 ~/.claude/skills/elon/setup --local                  # Auto-detect platform
-~/.claude/skills/elon/setup --host=cursor --local     # Cursor project only
 ```
 
 ---
@@ -161,7 +152,6 @@ No dependencies. No runtime. No build step. Just markdown that Claude reads.
 | **Claude Code** | `~/.claude/skills/` | `.claude/skills/` | SKILL.md (symlinked) | ✅ |
 | **Codex (OpenAI)** | `~/.codex/skills/` | `.agents/skills/` | SKILL.md (symlinked) | ✅ |
 | **Kiro (AWS)** | `~/.kiro/skills/` | `.kiro/skills/` | SKILL.md (symlinked) | ✅ |
-| **Cursor** | `~/.cursor/rules/` | `.cursor/rules/` | `.mdc` (generated) | ✅ |
 | **OpenClaw** | `~/.openclaw/skills/` | `skills/` | SKILL.md (symlinked) | ✅ |
 
 ---
