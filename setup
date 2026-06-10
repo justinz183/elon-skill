@@ -25,11 +25,13 @@ header(){ echo -e "${CYAN}▸${NC} $1"; }
 # --- Parse args ---
 HOST=""
 LOCAL=false
+UNINSTALL=false
 
 for arg in "$@"; do
   case "$arg" in
     --host=*) HOST="${arg#*=}" ;;
     --local) LOCAL=true ;;
+    --uninstall) UNINSTALL=true ;;
     --help|-h)
       echo ""
       echo "Usage: ./setup [OPTIONS]"
@@ -37,6 +39,7 @@ for arg in "$@"; do
       echo "Options:"
       echo "  --host=PLATFORM  Target platform: claude, codex, kiro, openclaw, all, auto (default: auto)"
       echo "  --local          Install to project scope instead of global"
+      echo "  --uninstall      Remove installed skill links (all platforms unless --host given)"
       echo "  --help           Show this message"
       echo ""
       echo "Examples:"
@@ -44,6 +47,7 @@ for arg in "$@"; do
       echo "  ./setup --host=claude      Install for Claude Code only"
       echo "  ./setup --host=all         Install for all supported platforms"
       echo "  ./setup --local            Project-scoped install (current directory)"
+      echo "  ./setup --uninstall        Remove skill links from all platforms"
       exit 0
       ;;
   esac
@@ -67,6 +71,17 @@ detect_platforms() {
   echo "${platforms[@]}"
 }
 
+# Skills directory for a platform (respects --local)
+skills_dir_for_platform() {
+  case "$1" in
+    claude)   if [ "$LOCAL" = true ]; then echo ".claude/skills"; else echo "$HOME/.claude/skills"; fi ;;
+    codex)    if [ "$LOCAL" = true ]; then echo ".agents/skills"; else echo "$HOME/.codex/skills"; fi ;;
+    kiro)     if [ "$LOCAL" = true ]; then echo ".kiro/skills";   else echo "$HOME/.kiro/skills"; fi ;;
+    openclaw) if [ "$LOCAL" = true ]; then echo "skills";         else echo "$HOME/.openclaw/skills"; fi ;;
+    *) return 1 ;;
+  esac
+}
+
 if [ -z "$HOST" ] || [ "$HOST" = "auto" ]; then
   PLATFORMS=($(detect_platforms))
   info "Auto-detected: ${PLATFORMS[*]}"
@@ -74,6 +89,49 @@ elif [ "$HOST" = "all" ]; then
   PLATFORMS=("claude" "codex" "kiro" "openclaw")
 else
   PLATFORMS=("$HOST")
+fi
+
+# --- Uninstall ---
+if [ "$UNINSTALL" = true ]; then
+  # Clean every platform unless one was explicitly requested
+  if [ -z "$HOST" ] || [ "$HOST" = "auto" ]; then
+    PLATFORMS=("claude" "codex" "kiro" "openclaw")
+  fi
+
+  ALL_NAMES=("elon")
+  for entry in "${SUB_SKILLS[@]}"; do
+    ALL_NAMES+=("${entry%%:*}")
+  done
+
+  REAL_SKILL_DIR="$(cd "$SKILL_DIR" && pwd -P)"
+  REMOVED=0
+
+  for platform in "${PLATFORMS[@]}"; do
+    SKILLS_DIR="$(skills_dir_for_platform "$platform")" || continue
+    [ -d "$SKILLS_DIR" ] || continue
+    header "Uninstalling from ${platform} (${SKILLS_DIR})..."
+
+    for name in "${ALL_NAMES[@]}"; do
+      target="${SKILLS_DIR}/${name}"
+      if [ -L "$target" ]; then
+        rm "$target"
+        info "Removed /${name}"
+        REMOVED=$((REMOVED + 1))
+      elif [ -d "$target" ]; then
+        if [ "$(cd "$target" && pwd -P)" = "$REAL_SKILL_DIR" ]; then
+          warn "Kept ${target} — it's the repo clone itself (delete it manually if you want it gone)"
+        else
+          warn "Kept ${target} — not a symlink created by this installer"
+        fi
+      fi
+    done
+  done
+
+  echo ""
+  echo -e "${GREEN}${BOLD}✓ Removed ${REMOVED} skill link(s).${NC}"
+  echo -e "${YELLOW}   Restart your editor so the skill registry reloads.${NC}"
+  echo ""
+  exit 0
 fi
 
 # --- Symlink helper ---
@@ -114,40 +172,10 @@ for platform in "${PLATFORMS[@]}"; do
   header "Installing for ${platform}..."
 
   # Determine skills directory
-  case "$platform" in
-    claude)
-      if [ "$LOCAL" = true ]; then
-        SKILLS_DIR=".claude/skills"
-      else
-        SKILLS_DIR="$HOME/.claude/skills"
-      fi
-      ;;
-    codex)
-      if [ "$LOCAL" = true ]; then
-        SKILLS_DIR=".agents/skills"
-      else
-        SKILLS_DIR="$HOME/.codex/skills"
-      fi
-      ;;
-    kiro)
-      if [ "$LOCAL" = true ]; then
-        SKILLS_DIR=".kiro/skills"
-      else
-        SKILLS_DIR="$HOME/.kiro/skills"
-      fi
-      ;;
-    openclaw)
-      if [ "$LOCAL" = true ]; then
-        SKILLS_DIR="skills"
-      else
-        SKILLS_DIR="$HOME/.openclaw/skills"
-      fi
-      ;;
-    *)
-      error "Unknown platform: ${platform}"
-      continue
-      ;;
-  esac
+  if ! SKILLS_DIR="$(skills_dir_for_platform "$platform")"; then
+    error "Unknown platform: ${platform}"
+    continue
+  fi
 
   INSTALLED=0
 
