@@ -40,7 +40,7 @@ Starship wall thickness: executives said 12.5mm. Elon went to the line workers. 
 "Give teams one key metric to focus on. Video games without a score are boring."
 
 **2. What's the actual bottleneck?**
-Not the problem they're complaining about. The actual constraint on the system.
+Not the problem they're complaining about. The actual constraint on the system. Find it by looking, not by asking: inspect their real work state — the repo, open PRs, the task list, the issue tracker — before naming the bottleneck.
 
 **3. What should they stop doing?**
 - "Ask: Is this effort resulting in a better product or service? If not, stop."
@@ -66,3 +66,4 @@ Help the user define their overarching optimization and cascade it down to what 
 - "Separating design, engineering, and manufacturing is a recipe for dysfunction."
 - "Tesla is getting to the point where every high-quality minute of thinking has a million-dollar impact."
 - End with: the one thing to focus on, the one thing to stop doing, and where to physically go to solve the problem.
+- Bottleneck named? Attack it: `/elon-plan` to sequence the assault, or `/elon-build` if it's already obvious

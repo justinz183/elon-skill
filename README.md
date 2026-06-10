@@ -94,7 +94,21 @@ Use them in sequence through a project, or jump to whichever phase you need:
                                                                                 /elon-retro
 ```
 
-Or use `/elon` anytime for general mentorship — it covers everything.
+Or use `/elon` anytime for general mentorship — it covers everything. The general mentor knows the suite and routes you to the right phase skill when your problem lives in one.
+
+---
+
+## Grounded, not cosplay
+
+Every skill goes to the source before it opines — persona plus reality, not just quotes:
+
+- `/elon-review` runs the actual `git diff` and cites exact files and lines
+- `/elon-test` finds your test suite and runs it, then reads the failures itself
+- `/elon-think` looks up real costs and benchmarks for magic-wand numbers and idiot indexes — and labels every figure **verified** or **assumption**
+- `/elon-retro` reconstructs what happened from `git log` and CI history, not from memory
+- `/elon-ship` checks your repo for the real blocker list: failing tests, unmerged branches, undeployed commits
+
+中文输入，中文输出 — skills match your language; direct book quotes stay in English.
 
 ---
 
@@ -170,8 +184,12 @@ Skills update instantly — they're symlinked.
 
 ```bash
 cd ~/.claude/skills/elon && ./setup --uninstall
-# Or manually:
-rm -rf ~/.claude/skills/elon{,-think,-plan,-build,-review,-test,-ship,-retro,-hire,-focus}
+```
+
+Removes the skill links from all platforms. The cloned repo itself is kept — delete it manually if you want it gone:
+
+```bash
+rm -rf ~/.claude/skills/elon
 ```
 
 ---
